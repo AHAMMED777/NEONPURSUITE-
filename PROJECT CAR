@@ -1,0 +1,81 @@
+import pygame
+import random
+
+pygame.init()
+
+WIDTH, HEIGHT = 800, 600
+win = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("NEONPURSUITE")
+
+BLACK = (0,0,0)
+WHITE = (255,255,255)
+NEON_BLUE = (0,255,255)
+NEON_PURPLE = (180,0,255)
+
+clock = pygame.time.Clock()
+FPS = 60
+car_money = 500
+cars = {"Common": 200, "Rare":  1000}
+
+font = pygame.font.SysFont('Arial', 30)
+
+class Car:
+    def __init__(self, x, y, color, speed):
+        self.x = x
+        self.y = y
+        self.color = color
+        self.speed = speed
+        self.width = 50
+        self.height = 100
+    def draw(self, win):
+        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height))
+
+lines = [pygame.Rect(WIDTH//2-5, i*150, 10, 100) for i in range(10)]
+
+player_car = Car(WIDTH//2-25, HEIGHT-150, NEON_BLUE, 5)
+
+enemy_cars = []
+spawn_timer = 0
+
+run = True
+while run:
+    clock.tick(FPS)
+    win.fill(BLACK)
+
+    for line in lines:
+        pygame.draw.rect(win, NEON_PURPLE, line)
+        line.y += 5
+        if line.y > HEIGHT:
+            line.y -= HEIGHT + 100
+
+    spawn_timer += 1
+    if spawn_timer > 90:
+        lane_x = random.choice([WIDTH//2-125, WIDTH//2-25, WIDTH//2+75])
+        enemy_cars.append(Car(lane_x, -120, NEON_PURPLE, random.randint(3,6)))
+        spawn_timer = 0
+
+    for car in enemy_cars[:]:
+        car.y += car.speed
+        car.draw(win)
+        if car.y > HEIGHT:
+            enemy_cars.remove(car)
+            car_money += 50
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+        player_car.x = max(0, player_car.x - player_car.speed)
+    if keys[pygame.K_RIGHT]:
+        player_car.x = min(WIDTH - player_car.width, player_car.x + player_car.speed)
+
+    player_car.draw(win)
+
+    money_text = font.render(f"CarMoney: {car_money}", True, WHITE)
+    win.blit(money_text, (10,10))
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+
+    pygame.display.update()
+
+pygame.quit()
